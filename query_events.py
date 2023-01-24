@@ -38,7 +38,7 @@ def query_waveforms(Catalog, station, location):
         st = client.get_waveforms("IU", station, location, "BH?",t1, t2,
                                   minimumlength=1800, attach_response=True)
         st_list.append(st)
-    return st
+    return st_list
 
     def write_out_st():
         '''

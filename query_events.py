@@ -35,11 +35,21 @@ def query_waveforms(Catalog, station, location):
     for event in Catalog:
         t1 = event.origins[0].time
         t2 = t1 + timedelta(minutes=30)
-        query = ("IU", station, location, "BH?", t1, t2)
-        st = client.get_waveforms_bulk(query, minimumlength=1800,
-                                    attach_response=True)
+        st = client.get_waveforms("IU", station, location, "BH?",t1, t2,
+                                  minimumlength=1800, attach_response=True)
         st_list.append(st)
     return st
+
+    def write_out_st():
+        '''
+        Writes out the list of Streams to individual SAC files
+        '''
+    
+    def update_sac_headers():
+        '''
+        Update sac headers for each Stream object
+        '''
+
 
 if __name__ == '__main__':
 

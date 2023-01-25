@@ -1,2 +1,3 @@
-from setuptools import setup, find_packages
-setup(name='Event_scraper', version='1.0', author='Joseph Asplet', packages=find_packages())
+from setuptools import setup, find_packages 
+
+setup(name='eventscraper', version='1.0', author='Joseph Asplet', url='http://www.github.com/Jasplet/event_scraper', packages=find_packages())

@@ -21,7 +21,7 @@ def make_event_query(stla, stlo, t1, t2, phase='SKS'):
 
     return event_catalog
 
-def query_waveforms(Event, station, location):
+def query_waveforms(Event, station, loc_code="00"):
     ''' 
     Use Obspy Client.get_waveforms() to query waveform data.
     Quries waveforms up to 30 minutes after origin time from a single 
@@ -34,9 +34,22 @@ def query_waveforms(Event, station, location):
     # a list of (in theory 3 component) Stream objects
     t1 = event.origins[0].time
     t2 = t1 + timedelta(minutes=30)
-    st = client.get_waveforms("IU", station, location, "BH?",t1, t2,
+    st = client.get_waveforms("IU", station, loc_code, "BH?",t1, t2,
                                 minimumlength=1800, attach_response=True)
     return st 
+
+def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, path=None):
+    '''
+    Queries waveform data for a Catalog of Events at a single station.
+    Waveform data can be written out (as SAC files) or
+    returned as a single Stream
+    '''
+
+    for Event in Catalog:
+        st = query_waveforms(Event, station, loc_code)
+        if write_out:
+            #To write out the Stream objects as sac files with updated headers we need to
+            #do a bit of a hack
 
 
 def write_out_st():

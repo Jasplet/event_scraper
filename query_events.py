@@ -21,34 +21,33 @@ def make_event_query(stla, stlo, t1, t2, phase='SKS'):
 
     return event_catalog
 
-def query_waveforms(Catalog, station, location):
+def query_waveforms(Event, station, location):
     ''' 
     Use Obspy Client.get_waveforms() to query waveform data.
-    Uses events from an obspy Catalog object
+    Quries waveforms up to 30 minutes after origin time from a single 
+    earthquake (Obspy Event object)
     '''
     client = Client("IRIS")
-    st_list = []
     # Need to make a list and do individual queries for a single station
     # as we cannot easily split up the Stream object from get_waveforms_bulk 
     # so insteasd we will make each Event's query seperately and compile
     # a list of (in theory 3 component) Stream objects
-    for event in Catalog:
-        t1 = event.origins[0].time
-        t2 = t1 + timedelta(minutes=30)
-        st = client.get_waveforms("IU", station, location, "BH?",t1, t2,
-                                  minimumlength=1800, attach_response=True)
-        st_list.append(st)
-    return st_list
+    t1 = event.origins[0].time
+    t2 = t1 + timedelta(minutes=30)
+    st = client.get_waveforms("IU", station, location, "BH?",t1, t2,
+                                minimumlength=1800, attach_response=True)
+    return st 
 
-    def write_out_st():
-        '''
-        Writes out the list of Streams to individual SAC files
-        '''
-    
-    def update_sac_headers():
-        '''
-        Update sac headers for each Stream object
-        '''
+
+def write_out_st():
+    '''
+    Writes out the list of Streams to individual SAC files
+    '''
+
+def update_sac_headers():
+    '''
+    Update sac headers for each Stream object
+    '''
 
 
 if __name__ == '__main__':
@@ -64,5 +63,7 @@ if __name__ == '__main__':
     start = UTCDateTime("2001-01-01T00:00:00")
     end = UTCDateTime("2022-01-01T00:00:00")
 
+    path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
     events = make_event_query(stla, stlo, start, end)
-    events.write(f"{path}/")
+    events.write(f"{path}/{station}_data.xml", format="QUAKEML")
+

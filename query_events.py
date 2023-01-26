@@ -48,7 +48,8 @@ def query_waveforms(Event, station, loc_code="00"):
     # SKS arrival is calculated in seconds after 
     t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
     t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
-    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2, attach_response=True)
+    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2, 
+                                    minlength=360, attach_response=True)
     if len(st_raw) > 3:
         raise ValueError('Too many channels')
     channels = [tr.stats.channel for tr in st_raw]
@@ -99,10 +100,10 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
                 print('f{UserWarning}, skip event')
                 skipped +=1
                 continue
-            # except FDSNNoDataException:
-            #     print(f'{FDSNNoDataException}, skip event')
-            #     skipped +=1
-            #     continue
+            except FDSNNoDataException:
+                print(f'{FDSNNoDataException}, skip event')
+                skipped +=1
+                continue
 
         print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 

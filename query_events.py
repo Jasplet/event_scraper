@@ -3,6 +3,7 @@ import argparse
 from datetime import timedelta
 import obspy
 from obspy.clients.fdsn.client import Client
+from obspy.clients.fdsn.header import (FDSNNoDataException)
 from obspy import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 from obspy.io.sac import SACTrace
@@ -95,6 +96,9 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
                     print(n)
             except UserWarning:
                 print('f{UserWarning}, skip event')
+                skipped +=1
+            except FDSNNoDataException:
+                print(f'{FDSNNoDataException}, skip event')
                 skipped +=1
                 continue
 

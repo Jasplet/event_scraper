@@ -10,6 +10,7 @@ from obspy.io.sac import SACTrace
 from obspy.taup import TauPyModel
 import warnings
 from os.path import isfile
+from lxml.etree import XMLSyntaxError
 
 skipped = 0
 # Query ISC catalog (via obspy) for a set of events a set distance from
@@ -90,7 +91,7 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
             origin = Event.origins[0].time
             filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
             if isfile(f'{path}/{filename}.BHN') & isfile(f'{path}/{filename}.BHE') & isfile(f'{path}/{filename}.BHZ'):
-                print('{filename} already downloaded')
+                print(f'{filename} already downloaded')
                 n += 1
                 continue
             else:
@@ -106,11 +107,15 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
                     if n % 10 == 0:
                         print(n)
                 except UserWarning:
-                    print('f{UserWarning}, skip event')
+                    print(f'{UserWarning}, skip event')
                     skipped +=1
                     continue
                 except FDSNNoDataException:
                     print(f'{FDSNNoDataException}, skip event')
+                    skipped +=1
+                    continue
+                except XMLSyntaxError:
+                    print('XML syntax error in response, skip')
                     skipped +=1
                     continue
 

@@ -36,9 +36,15 @@ def query_waveforms(Event, station, loc_code="00"):
     # as we cannot easily split up the Stream object from get_waveforms_bulk 
     # so insteasd we will make each Event's query seperately and compile
     # a list of (in theory 3 component) Stream objects
-    warnings.filterwarnings('error') 
-    t1 = Event.origins[0].time + timedelta(minutes=20)
-    t2 = t1 + timedelta(minutes=30)
+    warnings.filterwarnings('error')
+    evdp = Event.origins[0].depth / 1000 # converts from [m] -> [km]
+    dist_m, _, _ = gps2dist_azimuth(evla, evlo, station['latitude'], station['longitude'])
+    dist_deg = kilometer2degrees(dist_m/1000)
+    tt_pred = calc_tt(evdp, dist_deg)
+    # Request records that start 3 minutes before and and 3 minutes after the predicted SKS arrival
+    # SKS arrival is calculated in seconds after 
+    t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
+    t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
     st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2,
                                 minimumlength=1800, attach_response=True)
     if len(st_raw) > 3:

@@ -1,6 +1,12 @@
 
 import argparse
 from datetime import timedelta
+from lxml.etree import XMLSyntaxError
+from contextlib import closing
+from multiprocessing import Pool
+from functools import partial
+import warnings
+from os.path import isfile
 import obspy
 from obspy.clients.fdsn.client import Client
 from obspy.clients.fdsn.header import (FDSNNoDataException)
@@ -8,9 +14,6 @@ from obspy import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 from obspy.io.sac import SACTrace
 from obspy.taup import TauPyModel
-import warnings
-from os.path import isfile
-from lxml.etree import XMLSyntaxError
 
 skipped = 0
 # Query ISC catalog (via obspy) for a set of events a set distance from
@@ -73,6 +76,30 @@ def query_waveforms(Event, station, loc_code="00"):
 
     return st 
 
+def query_for_event(Event, station, loc_code, path):
+
+    origin = Event.origins[0].time
+    filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
+    if isfile(f'{path}/{filename}.BHN') & isfile(f'{path}/{filename}.BHE') & isfile(f'{path}/{filename}.BHZ'):
+        print(f'{filename} already downloaded')
+        return
+    else:
+        try:
+            st = query_waveforms(Event, station, loc_code)
+        except UserWarning:
+            print(f'{UserWarning}, skip event')
+            return
+        except FDSNNoDataException:
+            print(f'{FDSNNoDataException}, skip event')
+            return 
+        except XMLSyntaxError:
+            print('XML syntax error in response, skip')
+            return 
+        for tr in st:
+            channel = tr.stats.channel
+            sactr = make_sactrace(Event, station, tr)
+            sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+
 def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, path=None):
     '''
     Queries waveform data for a Catalog of Events at a single station.
@@ -88,36 +115,7 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
         skipped = 0
         n = 0
         for Event in Catalog:
-            origin = Event.origins[0].time
-            filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
-            if isfile(f'{path}/{filename}.BHN') & isfile(f'{path}/{filename}.BHE') & isfile(f'{path}/{filename}.BHZ'):
-                print(f'{filename} already downloaded')
-                n += 1
-                continue
-            else:
-                try:
-                    st = query_waveforms(Event, station, loc_code)
-                
-                    for tr in st:
-                        channel = tr.stats.channel
-                        sactr = make_sactrace(Event, station, tr)
-                        
-                        sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
-                    n +=1 
-                    if n % 10 == 0:
-                        print(n)
-                except UserWarning:
-                    print(f'{UserWarning}, skip event')
-                    skipped +=1
-                    continue
-                except FDSNNoDataException:
-                    print(f'{FDSNNoDataException}, skip event')
-                    skipped +=1
-                    continue
-                except XMLSyntaxError:
-                    print('XML syntax error in response, skip')
-                    skipped +=1
-                    continue
+            query_for_event(Event, station, loc_code, write_out, path)
 
         print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 
@@ -128,6 +126,17 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
             st_out += st
         return st_out
             
+def multithread_waveform_query(nproc, Catalog, station, loc_code, path):
+    '''
+    Multithreaded option to query data. Assumes that you want data to be written out.
+    Uses Pool object
+    '''
+    catalog_query = partial(query_for_event, station=station, loc_code=loc_code, path=path)
+
+    with closing(Pool(processes = nproc)) as pool:
+        pool.map(catalog_query, Catalog)
+
+    
 
 def make_sactrace(Event, station, Trace):
     '''
@@ -177,7 +186,7 @@ if __name__ == '__main__':
     # parser.add_argument('-s','-station',action='store',type=str, help='Station Code')
     # parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
     # parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
-    station = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86} 
+    furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86} 
     start = UTCDateTime("2001-01-01T00:00:00")
     end = UTCDateTime("2022-01-01T00:00:00")
 
@@ -185,6 +194,7 @@ if __name__ == '__main__':
     # events = make_event_query(station, start, end)
     # events.write(f"{path}/{station}_data.xml", format="QUAKEML")
     events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
-    get_waveforms_for_catalog(events, station, write_out=True,
-                path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
+    # get_waveforms_for_catalog(events, station, write_out=True,
+    #             path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
+    multithread_waveform_query(4, events, furi, '00', path)
    

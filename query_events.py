@@ -7,8 +7,9 @@ from obspy import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 from obspy.io.sac import SACTrace
 from obspy.taup import TauPyModel
+import warnings
 
-
+skipped = 0
 # Query ISC catalog (via obspy) for a set of events a set distance from
 # a station then using this Catalog object, query waveforms where we would
 # expect to see SKS.
@@ -18,7 +19,7 @@ def make_event_query(station, t1, t2, phase='SKS'):
     client = Client('IRIS')
     if phase == 'SKS':
         event_catalog = client.get_events(starttime=t1, endtime=t2, minmagnitude=5.5,
-        maxmagnitude=7, catalog="ISC", latitude=station.latitude, longitude=station.longitude,
+        maxmagnitude=7, catalog="ISC", latitude=station['latitude'], longitude=station['longitude'],
         minradius=95, maxradius=120, magnitudetype="MW")
 
     return event_catalog
@@ -29,12 +30,14 @@ def query_waveforms(Event, station, loc_code="00"):
     Quries waveforms up to 30 minutes after origin time from a single 
     earthquake (Obspy Event object)
     '''
+
     client = Client("IRIS")
     # Need to make a list and do individual queries for a single station
     # as we cannot easily split up the Stream object from get_waveforms_bulk 
     # so insteasd we will make each Event's query seperately and compile
     # a list of (in theory 3 component) Stream objects
-    t1 = Event.origins[0].time
+    warnings.filterwarnings('error') 
+    t1 = Event.origins[0].time + timedelta(minutes=20)
     t2 = t1 + timedelta(minutes=30)
     st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2,
                                 minimumlength=1800, attach_response=True)
@@ -47,7 +50,11 @@ def query_waveforms(Event, station, loc_code="00"):
                                 starttime=t1, endtime=t2, level='response') 
         st_raw.rotate('->ZNE', inventory=inv)
     #Copy to avoid accidental double correcting
-    st = st_raw.remove_response().copy() #remove instrument reponse now (might as well)
+    try:
+        st = st_raw.remove_response().copy() #remove instrument reponse now (might as well)
+    except ValueError:
+        print('no reponse, so skip event')
+        return   
     # Intial broad fliter, we hont want any frequency information outside this range 
     # (and will likely want to get rid of some of the high f noise (0.1/0.3-0.5Hz))
     st.filter('bandpass', freqmin=0.01, freqmax=0.5, zerophase=True)
@@ -60,16 +67,32 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
     Waveform data can be written out (as SAC files) or
     returned as a single Stream
     '''
+    print(f'{len(Catalog)} events to query')
+    # turn UserWarnings (which we get if there is no response into errors
+    # which we can try, except. 
     if write_out:
         #To write out the Stream objects as sac files with updated headers we need to
         #do a bit of a hack
+        skipped = 0
+        n = 0
         for Event in Catalog:
-            st = query_waveforms(Event, station, loc_code)
-            for tr in st:
-                channel = tr.stats.channel
-                sactr = make_sactrace(Event, station, tr)
-                filename = f'{station["name"]}_{sactr.nzyear}{sactr.nzjday:03d}_{sactr.nzhour:02d}{sactr.nzmin:02d}{sactr.nzsec:02d}'
-                sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+            try:
+                st = query_waveforms(Event, station, loc_code)
+
+                for tr in st:
+                    channel = tr.stats.channel
+                    sactr = make_sactrace(Event, station, tr)
+                    filename = f'{station["name"]}_{sactr.nzyear}{sactr.nzjday:03d}_{sactr.nzhour:02d}{sactr.nzmin:02d}{sactr.nzsec:02d}'
+                    sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+                n +=1 
+                if n % 10 == 0:
+                    print(n)
+            except UserWarning:
+                print('f{UserWarning}, skip event')
+                skipped +=1
+                continue
+
+        print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 
     else:
         st_out = obspy.Stream()
@@ -122,16 +145,19 @@ def calc_tt(evdp, dist_deg, phase='SKS'):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(
-        description="Queries ISC bulletin (via IRIS) to get events that should give SKS phases at a station")
-    parser.add_argument('-s','-station',action='store',type=str, help='Station Code')
-    parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
-    parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
+    # parser = argparse.ArgumentParser(
+    #     description="Queries ISC bulletin (via IRIS) to get events that should give SKS phases at a station")
+    # parser.add_argument('-s','-station',action='store',type=str, help='Station Code')
+    # parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
+    # parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
     station = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86} 
     start = UTCDateTime("2001-01-01T00:00:00")
     end = UTCDateTime("2022-01-01T00:00:00")
 
     path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
-    events = make_event_query(station, start, end)
-    events.write(f"{path}/{station}_data.xml", format="QUAKEML")
-
+    # events = make_event_query(station, start, end)
+    # events.write(f"{path}/{station}_data.xml", format="QUAKEML")
+    events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
+    get_waveforms_for_catalog(events, station, write_out=True,
+                path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
+   

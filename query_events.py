@@ -16,7 +16,9 @@ skipped = 0
 # expect to see SKS.
 
 def make_event_query(station, t1, t2, phase='SKS'):
-
+    '''
+    F
+    '''
     client = Client('IRIS')
     if phase == 'SKS':
         event_catalog = client.get_events(starttime=t1, endtime=t2, minmagnitude=5.5,
@@ -39,15 +41,14 @@ def query_waveforms(Event, station, loc_code="00"):
     # a list of (in theory 3 component) Stream objects
     warnings.filterwarnings('error')
     evdp = Event.origins[0].depth / 1000 # converts from [m] -> [km]
-    dist_m, _, _ = gps2dist_azimuth(evla, evlo, station['latitude'], station['longitude'])
+    dist_m, _, _ = gps2dist_azimuth(Event.origins[0].latitude, Event.origins[0].longitude, station['latitude'], station['longitude'])
     dist_deg = kilometer2degrees(dist_m/1000)
     tt_pred = calc_tt(evdp, dist_deg)
     # Request records that start 3 minutes before and and 3 minutes after the predicted SKS arrival
     # SKS arrival is calculated in seconds after 
     t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
     t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
-    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2,
-                                minimumlength=1800, attach_response=True)
+    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2, attach_response=True)
     if len(st_raw) > 3:
         raise ValueError('Too many channels')
     channels = [tr.stats.channel for tr in st_raw]
@@ -97,10 +98,11 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
             except UserWarning:
                 print('f{UserWarning}, skip event')
                 skipped +=1
-            except FDSNNoDataException:
-                print(f'{FDSNNoDataException}, skip event')
-                skipped +=1
                 continue
+            # except FDSNNoDataException:
+            #     print(f'{FDSNNoDataException}, skip event')
+            #     skipped +=1
+            #     continue
 
         print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 

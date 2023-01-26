@@ -9,6 +9,7 @@ from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 from obspy.io.sac import SACTrace
 from obspy.taup import TauPyModel
 import warnings
+from os.path import isfile
 
 skipped = 0
 # Query ISC catalog (via obspy) for a set of events a set distance from
@@ -17,7 +18,8 @@ skipped = 0
 
 def make_event_query(station, t1, t2, phase='SKS'):
     '''
-    F
+    Function to query events which should give a clear 
+    teleseismic phase. Currently only implemented for SKS
     '''
     client = Client('IRIS')
     if phase == 'SKS':
@@ -48,14 +50,14 @@ def query_waveforms(Event, station, loc_code="00"):
     # SKS arrival is calculated in seconds after 
     t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
     t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
-    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2, 
-                                    minlength=360, attach_response=True)
+    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2,
+                                    minimumlength=360, attach_response=True)
     if len(st_raw) > 3:
         raise ValueError('Too many channels')
     channels = [tr.stats.channel for tr in st_raw]
     if ('BH1' in channels) and ('BH2' in channels):
         # get invetory fix orientations
-        inv= client.get_stations(network='IU', sta=station['name'], loc=loc_code, channel="BH?",
+        inv = client.get_stations(network='IU', sta=station['name'], loc=loc_code, channel="BH?",
                                 starttime=t1, endtime=t2, level='response') 
         st_raw.rotate('->ZNE', inventory=inv)
     #Copy to avoid accidental double correcting
@@ -85,25 +87,32 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
         skipped = 0
         n = 0
         for Event in Catalog:
-            try:
-                st = query_waveforms(Event, station, loc_code)
-
-                for tr in st:
-                    channel = tr.stats.channel
-                    sactr = make_sactrace(Event, station, tr)
-                    filename = f'{station["name"]}_{sactr.nzyear}{sactr.nzjday:03d}_{sactr.nzhour:02d}{sactr.nzmin:02d}{sactr.nzsec:02d}'
-                    sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
-                n +=1 
-                if n % 10 == 0:
-                    print(n)
-            except UserWarning:
-                print('f{UserWarning}, skip event')
-                skipped +=1
+            origin = Event.origins[0].time
+            filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
+            if isfile(f'{path}/{filename}.BHN') & isfile(f'{path}/{filename}.BHE') & isfile(f'{path}/{filename}.BHZ'):
+                print('{filename} already downloaded')
+                n += 1
                 continue
-            except FDSNNoDataException:
-                print(f'{FDSNNoDataException}, skip event')
-                skipped +=1
-                continue
+            else:
+                try:
+                    st = query_waveforms(Event, station, loc_code)
+                
+                    for tr in st:
+                        channel = tr.stats.channel
+                        sactr = make_sactrace(Event, station, tr)
+                        
+                        sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+                    n +=1 
+                    if n % 10 == 0:
+                        print(n)
+                except UserWarning:
+                    print('f{UserWarning}, skip event')
+                    skipped +=1
+                    continue
+                except FDSNNoDataException:
+                    print(f'{FDSNNoDataException}, skip event')
+                    skipped +=1
+                    continue
 
         print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 

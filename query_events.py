@@ -24,6 +24,22 @@ def make_event_query(station, t1, t2, phase='SKS'):
     '''
     Function to query events which should give a clear 
     teleseismic phase. Currently only implemented for SKS
+
+    Parameters
+    -----------
+        station : dict
+            dictionary containing station attributes (name, latitude, longitude, loc_code)
+        t1 : UTCDateTime
+            starttime for query
+        t2 : UTCDateTime
+            endtime for query
+        phase : str, default = SKS
+            phase of interest, sets min/max query radius. SKS is only phase implemented
+
+    Returns
+    ----------
+        event_catalog : Catalog 
+            Obspy Catalog object containing events
     '''
     client = Client('IRIS')
     if phase == 'SKS':
@@ -33,11 +49,19 @@ def make_event_query(station, t1, t2, phase='SKS'):
 
     return event_catalog
 
-def query_waveforms(Event, station, loc_code="00"):
+def query_waveforms(Event, station):
     ''' 
     Use Obspy Client.get_waveforms() to query waveform data.
     Quries waveforms up to 30 minutes after origin time from a single 
     earthquake (Obspy Event object)
+
+    Parameters
+    ----------
+        Event : Obspy Event object
+            Event (earthquake) to make query for 
+        station : dict
+            dictionary containing station attributes (name, latitude, longitude, loc_code)
+        
     '''
 
     client = Client("IRIS")
@@ -54,14 +78,14 @@ def query_waveforms(Event, station, loc_code="00"):
     # SKS arrival is calculated in seconds after 
     t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
     t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
-    st_raw = client.get_waveforms("IU", station['name'], loc_code, "BH?",t1, t2,
+    st_raw = client.get_waveforms("IU", station['name'], station['loc_code'], "BH?",t1, t2,
                                     minimumlength=360, attach_response=True)
     if len(st_raw) > 3:
         raise ValueError('Too many channels')
     channels = [tr.stats.channel for tr in st_raw]
     if ('BH1' in channels) and ('BH2' in channels):
         # get invetory fix orientations
-        inv = client.get_stations(network='IU', sta=station['name'], loc=loc_code, channel="BH?",
+        inv = client.get_stations(network='IU', sta=station['name'], loc=station['loc_code'], channel="BH?",
                                 starttime=t1, endtime=t2, level='response') 
         st_raw.rotate('->ZNE', inventory=inv)
     #Copy to avoid accidental double correcting
@@ -76,7 +100,7 @@ def query_waveforms(Event, station, loc_code="00"):
 
     return st 
 
-def query_for_event(Event, station, loc_code, path):
+def query_for_event(Event, station, path):
 
     origin = Event.origins[0].time
     filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
@@ -85,7 +109,7 @@ def query_for_event(Event, station, loc_code, path):
         return
     else:
         try:
-            st = query_waveforms(Event, station, loc_code)
+            st = query_waveforms(Event, station)
         except UserWarning:
             print(f'{UserWarning}, skip event')
             return
@@ -100,7 +124,7 @@ def query_for_event(Event, station, loc_code, path):
             sactr = make_sactrace(Event, station, tr)
             sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
 
-def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, path=None):
+def get_waveforms_for_catalog(Catalog, station, write_out=True, path=None):
     '''
     Queries waveform data for a Catalog of Events at a single station.
     Waveform data can be written out (as SAC files) or
@@ -115,23 +139,22 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
         skipped = 0
         n = 0
         for Event in Catalog:
-            query_for_event(Event, station, loc_code, write_out, path)
+            query_for_event(Event, station, station['loc_code'], write_out, path)
 
-        print(f'{skipped}/{len(Catalog)} event skipped for having no responses')
         return 
     else:
         st_out = obspy.Stream()
         for Event in Catalog:
-            st = query_waveforms(Event, station, loc_code)
+            st = query_waveforms(Event, station)
             st_out += st
         return st_out
             
-def multithread_waveform_query(nproc, Catalog, station, loc_code, path):
+def multithread_waveform_query(nproc, Catalog, station, path):
     '''
     Multithreaded option to query data. Assumes that you want data to be written out.
     Uses Pool object
     '''
-    catalog_query = partial(query_for_event, station=station, loc_code=loc_code, path=path)
+    catalog_query = partial(query_for_event, station=station, path=path)
 
     with closing(Pool(processes = nproc)) as pool:
         pool.map(catalog_query, Catalog)
@@ -186,7 +209,7 @@ if __name__ == '__main__':
     # parser.add_argument('-s','-station',action='store',type=str, help='Station Code')
     # parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
     # parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
-    furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86} 
+    furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86, 'loc_code': '00'} 
     start = UTCDateTime("2001-01-01T00:00:00")
     end = UTCDateTime("2022-01-01T00:00:00")
 
@@ -196,5 +219,5 @@ if __name__ == '__main__':
     events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
     # get_waveforms_for_catalog(events, station, write_out=True,
     #             path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
-    multithread_waveform_query(4, events, furi, '00', path)
+    multithread_waveform_query(4, events, furi, path)
    

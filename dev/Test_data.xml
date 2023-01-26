@@ -1,0 +1,180 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:ns0="http://service.iris.edu/fdsnws/event/1/">
+  <eventParameters publicID="smi:local/c96d6c6d-2b8c-4d00-8895-2ef7aa4cd46d">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4599109">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=22500062</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=202600492</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="676">
+        <text>NORTHERN ALASKA</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=22500062" ns0:contributorOriginId="08180923" ns0:contributor="ISC" ns0:contributorEventId="604462919" ns0:catalog="ISC">
+        <time>
+          <value>2014-04-18T18:44:18.930000Z</value>
+        </time>
+        <latitude>
+          <value>67.6773</value>
+        </latitude>
+        <longitude>
+          <value>-162.3453</value>
+        </longitude>
+        <depth>
+          <value>18400.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=202600492">
+        <mag>
+          <value>5.7</value>
+        </mag>
+        <type>MW</type>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=8666272">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=5319553</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=23493185</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="7">
+        <text>ANDREANOF ISLANDS, ALEUTIAN IS.</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=5319553" ns0:contributorOriginId="02443788" ns0:contributor="ISC" ns0:contributorEventId="16538127" ns0:catalog="ISC">
+        <time>
+          <value>2011-05-24T17:43:23.870000Z</value>
+        </time>
+        <latitude>
+          <value>52.5429</value>
+        </latitude>
+        <longitude>
+          <value>-173.2413</value>
+        </longitude>
+        <depth>
+          <value>141900.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=23493185">
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <type>MW</type>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=2873794">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=16824277</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=175847326</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="212">
+        <text>BONIN ISLANDS, JAPAN REGION</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=16824277" ns0:contributorOriginId="00911237" ns0:contributor="ISC" ns0:contributorEventId="14766808" ns0:catalog="ISC">
+        <time>
+          <value>2010-06-11T16:37:50.910000Z</value>
+        </time>
+        <latitude>
+          <value>26.735</value>
+        </latitude>
+        <longitude>
+          <value>142.6538</value>
+        </longitude>
+        <depth>
+          <value>28400.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=175847326">
+        <mag>
+          <value>5.6</value>
+        </mag>
+        <type>MW</type>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=2867676">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=4859510</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=22013783</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="7">
+        <text>ANDREANOF ISLANDS, ALEUTIAN IS.</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=4859510" ns0:contributorOriginId="15845067" ns0:contributor="ISC" ns0:contributorEventId="14260694" ns0:catalog="ISC">
+        <time>
+          <value>2009-03-30T12:07:27.840000Z</value>
+        </time>
+        <latitude>
+          <value>51.4975</value>
+        </latitude>
+        <longitude>
+          <value>-178.1844</value>
+        </longitude>
+        <depth>
+          <value>31000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=22013783">
+        <mag>
+          <value>5.7</value>
+        </mag>
+        <type>MW</type>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=1022751">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=2968952</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16291636</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="210">
+        <text>SOUTH OF MARIANA ISLANDS</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=2968952" ns0:contributorOriginId="4610518" ns0:contributor="ISC" ns0:contributorEventId="1817618" ns0:catalog="ISC">
+        <time>
+          <value>2001-04-02T06:50:04.070000Z</value>
+        </time>
+        <latitude>
+          <value>11.845</value>
+        </latitude>
+        <longitude>
+          <value>147.385</value>
+        </longitude>
+        <depth>
+          <value>33000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16291636">
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <type>MW</type>
+        <creationInfo>
+          <author>HRVD</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

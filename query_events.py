@@ -79,5 +79,6 @@ if __name__ == '__main__':
 
     path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
     events = make_event_query(stla, stlo, start, end)
+    print(len(events))
     events.write(f"{path}/{station}_data.xml", format="QUAKEML")
 

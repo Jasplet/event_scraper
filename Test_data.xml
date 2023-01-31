@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:ns0="http://service.iris.edu/fdsnws/event/1/">
-  <eventParameters publicID="smi:local/10d84f7b-0850-453b-9ed1-cc14748ab56a">
+  <eventParameters publicID="smi:local/6fc2fa2d-1c5b-4891-9b2a-fe626f51b4d2">
     <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4599109">
       <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=22500062</preferredOriginID>
       <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=202600492</preferredMagnitudeID>

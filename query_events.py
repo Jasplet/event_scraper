@@ -50,18 +50,19 @@ def get_waveforms_for_catalog(Catalog, station, loc_code="00", write_out=True, p
         if write_out:
             #To write out the Stream objects as sac files with updated headers we need to
             #do a bit of a hack
-
+            pass
 
 def write_out_st():
     '''
     Writes out the list of Streams to individual SAC files
     '''
+    pass
 
 def update_sac_headers():
     '''
     Update sac headers for each Stream object
     '''
-
+    pass
 
 if __name__ == '__main__':
 

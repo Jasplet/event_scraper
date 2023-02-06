@@ -45,7 +45,7 @@ def make_event_query(station, t1, t2, phase='SKS'):
     if phase == 'SKS':
         event_catalog = client.get_events(starttime=t1, endtime=t2, minmagnitude=5.5,
         maxmagnitude=7, catalog="ISC", latitude=station['latitude'], longitude=station['longitude'],
-        minradius=95, maxradius=120, magnitudetype="MW")
+        minradius=95, maxradius=120, magnitudetype="MW", mindepth=50)
 
     return event_catalog
 
@@ -214,10 +214,10 @@ if __name__ == '__main__':
     end = UTCDateTime("2022-01-01T00:00:00")
 
     path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
-    # events = make_event_query(station, start, end)
-    # events.write(f"{path}/{station}_data.xml", format="QUAKEML")
-    events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
+    events = make_event_query(furi, start, end)
+    events.write(f"{path}/{furi['name']}_data.xml", format="QUAKEML")
+    #events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
     # get_waveforms_for_catalog(events, station, write_out=True,
     #             path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
-    multithread_waveform_query(4, events, furi, path)
+    multithread_waveform_query(4, events, furi, path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
    

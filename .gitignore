@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#SAC file extenisions
+*.sac
+*.BHE
+*.BHN
+*.BHZ
+*.BH1
+*.BH2

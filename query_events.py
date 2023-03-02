@@ -45,7 +45,7 @@ def make_event_query(station, t1, t2, phase='SKS'):
     if phase == 'SKS':
         event_catalog = client.get_events(starttime=t1, endtime=t2, minmagnitude=5.5,
         maxmagnitude=7, catalog="ISC", latitude=station['latitude'], longitude=station['longitude'],
-        minradius=95, maxradius=120, magnitudetype="MW", mindepth=50)
+        minradius=95, maxradius=125, magnitudetype="MW", mindepth=50)
 
     return event_catalog
 

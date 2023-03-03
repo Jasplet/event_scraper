@@ -60,7 +60,7 @@ def query_waveforms(Event, station):
         Event : Obspy Event object
             Event (earthquake) to make query for 
         station : dict
-            dictionary containing station attributes (name, latitude, longitude, loc_code)
+            dictionary containing station attributes (name, latitude, longitude, loc_code, network_code)
         
     '''
 
@@ -78,14 +78,14 @@ def query_waveforms(Event, station):
     # SKS arrival is calculated in seconds after 
     t1 = Event.origins[0].time + timedelta(seconds=tt_pred) - timedelta(minutes=3)
     t2 = Event.origins[0].time + timedelta(seconds=tt_pred) + timedelta(minutes=3)
-    st_raw = client.get_waveforms("IU", station['name'], station['loc_code'], "BH?",t1, t2,
+    st_raw = client.get_waveforms(station['network_code'], station['name'], station['loc_code'], "BH?",t1, t2,
                                     minimumlength=360, attach_response=True)
     if len(st_raw) > 3:
         raise ValueError('Too many channels')
     channels = [tr.stats.channel for tr in st_raw]
     if ('BH1' in channels) and ('BH2' in channels):
         # get invetory fix orientations
-        inv = client.get_stations(network='IU', sta=station['name'], loc=station['loc_code'], channel="BH?",
+        inv = client.get_stations(network=station['network_code'], sta=station['name'], loc=station['loc_code'], channel="BH?",
                                 starttime=t1, endtime=t2, level='response') 
         st_raw.rotate('->ZNE', inventory=inv)
     #Copy to avoid accidental double correcting
@@ -100,8 +100,28 @@ def query_waveforms(Event, station):
 
     return st 
 
-def query_for_event(Event, station, path):
+def query_for_event(Event, station, write_out=False, path=None):
+    '''
+    Queries the IRIS Data management centre for a single Event (obspy Class for an earthquake) 
+    from a Catalog 
+    If the data is found it is returned either as a Stream or is written to a directory in SAC 
+    format if write_out=True
 
+    Parameters
+    ----------
+    Event : 
+        Obspy Event Object that hold the earthquake data to query the required waveforms for
+    station : dict
+        Dictionary holding station metadata, Should contain 'name','latitude','longitude','loc_code'
+    write_out : bool, defaul=False
+        Flag for if data should be written out to a directory. If specified then a path must also be given
+    path : str, default=None
+        Path to write waveform data to if desired
+    
+    Returns
+    ----------
+
+    '''
     origin = Event.origins[0].time
     filename = f'{station["name"]}_{origin.year}{origin.julday:03d}_{origin.hour:02d}{origin.minute:02d}{origin.second:02d}'
     if isfile(f'{path}/{filename}.BHN') & isfile(f'{path}/{filename}.BHE') & isfile(f'{path}/{filename}.BHZ'):
@@ -119,10 +139,13 @@ def query_for_event(Event, station, path):
         except XMLSyntaxError:
             print('XML syntax error in response, skip')
             return 
-        for tr in st:
-            channel = tr.stats.channel
-            sactr = make_sactrace(Event, station, tr)
-            sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+        if write_out:
+            for tr in st:
+                channel = tr.stats.channel
+                sactr = make_sactrace(Event, station, tr)
+                sactr.write(f'{path}/{filename}.{channel}', byteorder='big')
+        
+        return st
 
 def get_waveforms_for_catalog(Catalog, station, write_out=True, path=None):
     '''
@@ -131,16 +154,12 @@ def get_waveforms_for_catalog(Catalog, station, write_out=True, path=None):
     returned as a single Stream
     '''
     print(f'{len(Catalog)} events to query')
-    # turn UserWarnings (which we get if there is no response into errors
-    # which we can try, except. 
-    if write_out:
-        #To write out the Stream objects as sac files with updated headers we need to
-        #do a bit of a hack
-        skipped = 0
-        n = 0
-        for Event in Catalog:
-            query_for_event(Event, station, station['loc_code'], write_out, path)
 
+    if write_out:
+        for Event in Catalog:
+            #At this level we dont care about returning the Streams if
+            #we are writing out 
+            _ = query_for_event(Event, station, write_out, path)
         return 
     else:
         st_out = obspy.Stream()
@@ -209,7 +228,7 @@ if __name__ == '__main__':
     # parser.add_argument('-s','-station',action='store',type=str, help='Station Code')
     # parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
     # parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
-    furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86, 'loc_code': '00'} 
+    furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86, 'loc_code': '00', 'network_code':'IU'} 
     start = UTCDateTime("2001-01-01T00:00:00")
     end = UTCDateTime("2022-01-01T00:00:00")
 

@@ -44,7 +44,7 @@ def make_event_query(station, t1, t2, phase='SKS'):
     client = Client('IRIS')
     if phase == 'SKS':
         event_catalog = client.get_events(starttime=t1, endtime=t2, minmagnitude=5.5,
-        maxmagnitude=7, catalog="ISC", latitude=station['latitude'], longitude=station['longitude'],
+        maxmagnitude=7.2, catalog="ISC", latitude=station['latitude'], longitude=station['longitude'],
         minradius=95, maxradius=125, magnitudetype="MW", mindepth=50)
 
     return event_catalog
@@ -229,14 +229,18 @@ if __name__ == '__main__':
     # parser.add_argument('-la', '-latitude',action='store',type=float,help='station latitude')
     # parser.add_argument('-lo', '-longitude',action='store',type=float,help='station longitude')
     furi = {'name':'FURI', 'latitude': 8.895, 'longitude': 38.86, 'loc_code': '00', 'network_code':'IU'} 
-    start = UTCDateTime("2001-01-01T00:00:00")
-    end = UTCDateTime("2022-01-01T00:00:00")
+    nee = {'name':'NEE', 'latitude': 34.8249, 'longitude': -114.59941, 'loc_code': '--', 'network_code':'CI'}
+    # start = UTCDateTime("2001-01-01T00:00:00")
+    # end = UTCDateTime("2022-01-01T00:00:00")
+    start = UTCDateTime("2005-02-05T11:00:00")
+    end = UTCDateTime("2005-02-05T13:00:00")
 
-    path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
-    events = make_event_query(furi, start, end)
-    events.write(f"{path}/{furi['name']}_data.xml", format="QUAKEML")
-    #events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
-    # get_waveforms_for_catalog(events, station, write_out=True,
-    #             path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
-    multithread_waveform_query(4, events, furi, path='/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/data')
+    # path = '/Users/ja17375/Projects/DeepMelt/Ethiopia/FURI_data/'
+    path = '/Users/ja17375/Projects/TomH/'
+    events = make_event_query(nee, start, end)
+    # events.write(f"{path}/{nee['name']}_data.xml", format="QUAKEML")
+    # events = obspy.read_events(f'{path}/FURI_data.xml', format='QUAKEML')
+    get_waveforms_for_catalog(events, nee, write_out=True,
+                path='/Users/ja17375/Projects/TomH/data')
+    # multithread_waveform_query(1, events, nee, path='/Users/ja17375/Projects/TomH/data')
    

@@ -49,7 +49,7 @@ def make_event_query(station, t1, t2, phase='SKS'):
 
     return event_catalog
 
-def query_waveforms(Event, station):
+def query_waveforms(Event, station, agency=None):
     ''' 
     Use Obspy Client.get_waveforms() to query waveform data.
     Quries waveforms up to 30 minutes after origin time from a single 
@@ -64,7 +64,11 @@ def query_waveforms(Event, station):
         
     '''
 
-    client = Client("IRIS")
+    if agency is None:
+        client = Client("IRIS")
+    else:
+        client = Client(agency)
+    
     # Need to make a list and do individual queries for a single station
     # as we cannot easily split up the Stream object from get_waveforms_bulk 
     # so insteasd we will make each Event's query seperately and compile
